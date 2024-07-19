@@ -1,66 +1,65 @@
-# Example file showing a circle moving on screen
 import pygame
 from pygame.locals import *
+
+from constants import HEIGHT, WIDTH
+from food import Food
+from snake import Direction, Snake
+
 
 class App:
     def __init__(self):
       self._running = True
       self._display_surf = None
-      self.size = self.weight, self.height = 640, 400
-      self._player_pos = None
+      self.size = self.weight, self.height = WIDTH, HEIGHT
+      self._snake = Snake()
+      self._food = Food.createRandomFood(self._snake)
 
     def on_init(self):
       pygame.init()
       self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE)
+      pygame.display.set_caption('Python Snake')
       self._running = True
-      self._player_pos = pygame.Vector2(self._display_surf.get_width() / 2, self._display_surf.get_height() / 2)
     
-    def on_event(self, event, dt):
-      if event.type == pygame.QUIT:
-          self._running = False
+    def on_event(self, event):
+        if event.type == pygame.QUIT:
+            self._running = False
 
-      if event.type == pygame.VIDEORESIZE:
-          self.size = self.weight, self.height = event.size
-          self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.RESIZABLE)
-          self._player_pos = pygame.Vector2(self._display_surf.get_width() / 2, self._display_surf.get_height() / 2)
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self._running = False
+        
+            if event.key == pygame.K_w:
+                self._snake.change_direction(Direction.UP)
+            if event.key == pygame.K_s:
+                self._snake.change_direction(Direction.DOWN)
+            if event.key == pygame.K_a:
+                self._snake.change_direction(Direction.LEFT)
+            if event.key == pygame.K_d:
+                self._snake.change_direction(Direction.RIGHT)
 
-      if event.type == pygame.KEYDOWN:
-          if event.key == pygame.K_ESCAPE:
-              self._running = False
-      
-      '''
-          if event.key == pygame.K_w:
-              self._player_pos.y -= 300 * dt
-          if event.key == pygame.K_s:
-              self._player_pos.y += 300 * dt
-          if event.key == pygame.K_a:
-              self._player_pos.x -= 300 * dt
-          if event.key == pygame.K_d:
-              self._player_pos.x += 300 * dt
-      '''
-
-
-    def on_loop(self, dt):
-      keys = pygame.key.get_pressed()
-      if keys[pygame.K_w]:
-          self._player_pos.y -= 300 * dt
-      if keys[pygame.K_s]:
-          self._player_pos.y += 300 * dt
-      if keys[pygame.K_a]:
-          self._player_pos.x -= 300 * dt
-      if keys[pygame.K_d]:
-          self._player_pos.x += 300 * dt
-
-      
+    def on_loop(self):
+        self._snake.move()
+        
+        # collided with ourselves?
+        if self._snake.does_self_collide():
+            self._running = False
+            
+        # have we eaten the food?
+        if self._snake.does_collide_with_food(self._food):
+            self._snake.grow()
+            self._food = Food.createRandomFood(self._snake)
+         
+    def display_score(self):
+        font = pygame.font.Font(None, 36)
+        text = font.render(f"Score: {len(self._snake.body) - 3}", True, "white")
+        self._display_surf.blit(text, (10, 10))
+         
     def on_render(self):
       # fill the screen with a color to wipe away anything from last frame
       self._display_surf.fill("black")
-
-      # draw a square at the player's position
-      pygame.draw.rect(self._display_surf, "blue", pygame.Rect(self._player_pos.x - 20, self._player_pos.y - 20, 40, 40))
-
-      # draw a circle at the player's position
-      # pygame.draw.circle(screen, "red", player_pos, 40)
+      self._food.draw(self._display_surf)
+      self._snake.draw(self._display_surf)
+      self.display_score()
         
     def on_cleanup(self):
       pygame.quit()
@@ -70,16 +69,15 @@ class App:
             self._running = False
             
         clock = pygame.time.Clock()
-        dt = 0;
-
+       
  
         while( self._running ):
             for event in pygame.event.get():
-                self.on_event(event, dt)
-            self.on_loop(dt)
+                self.on_event(event)
+            self.on_loop()
             self.on_render()
             pygame.display.flip()
-            dt = clock.tick(60) / 1000
+            clock.tick(60) / 1000
 
         self.on_cleanup()
  
