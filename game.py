@@ -77,7 +77,7 @@ class App:
             self.on_loop()
             self.on_render()
             pygame.display.flip()
-            clock.tick(60) / 1000
+            clock.tick(10)
 
         self.on_cleanup()
  

@@ -1,4 +1,5 @@
 from enum import Enum
+from random import randint
 import pygame
 from constants import BLOCK_SIZE, GRID_HEIGHT, GRID_WIDTH
 
@@ -10,21 +11,22 @@ class Direction(Enum):
 
 class Snake:
   def __init__(self) -> None:
-    self.body = [pygame.Vector2(0, 0), pygame.Vector2(1, 0), pygame.Vector2(2, 0)]
+    self.ramdomize_start_position()
     self.direction = pygame.Vector2(1, 0)
-    self.counter = 0;
-    self.speed = 40
     self.current_direction = Direction.RIGHT
+    
+    
+  def ramdomize_start_position(self):
+    x = randint(0, GRID_WIDTH - 1)
+    y = randint(0, GRID_HEIGHT - 1)
+    self.body = [pygame.Vector2(x, y), pygame.Vector2(x + 1, y), pygame.Vector2(x + 2, y)]
+    
     
   def draw(self, screen):
     for pos in self.body:
       pygame.draw.rect(screen, "green", pygame.Rect(pos.x * BLOCK_SIZE + 1, pos.y * BLOCK_SIZE + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2))
 
   def move(self):
-    self.counter += 1
-    if (self.counter % (50-self.speed) != 0):
-      return
-    
     # Get the last added segment of the snake
     head = self.body[-1]
     
